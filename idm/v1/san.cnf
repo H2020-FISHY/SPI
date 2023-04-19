@@ -1,0 +1,25 @@
+[req]
+default_bits  = 2048
+distinguished_name = req_distinguished_name
+req_extensions = req_ext
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+countryName = XX
+stateOrProvinceName = N/A
+localityName = N/A
+organizationName = Self-signed certificate
+commonName = FISHY SPI - Self-signed certificate
+
+[req_ext]
+subjectAltName = @alt_names
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 10.4.34.212 # node
+IP.2 = 192.168.0.10 # net-dashboard
+IP.3 = 192.168.1.10 # net-spi
+IP.4 = 192.168.2.10 # net-central-repo
