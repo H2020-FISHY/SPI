@@ -21,6 +21,9 @@ def if_in_push(src_key, src_dict, dst_key, dst_dict):
     if src_key in src_dict:
         dst_dict[dst_key] = src_dict[src_key]
 
+def dict_without_empty_values(src_dict):
+    return {k: v for k, v in src_dict.items() if len(str(v).strip()) > 0}
+
 
 @app.route("/api/normalize/zeek", methods=["POST"])
 def normalize_zeek():
@@ -45,7 +48,7 @@ def normalize_zeek():
             device_event_class_id="Unknown",  # Try to map this value
             event_name=event["note"],
             severity="Unknown",  # Try to map this value
-            extensions_list=extensions_list,
+            extensions_list=dict_without_empty_values(extensions_list),
         )
 
     except Exception as ex:
@@ -91,7 +94,7 @@ def normalize_pmem():
             device_event_class_id="Unknown",  # Try to map this value
             event_name=event["type"],
             severity="Unknown",  # Try to map this value
-            extensions_list=extensions_list,
+            extensions_list=dict_without_empty_values(extensions_list),
         )
 
     except Exception as ex:
@@ -138,7 +141,7 @@ def normalize_tm():
             device_event_class_id="Unknown",  # Try to map this value
             event_name="Domain infrastructure integrity report",
             severity="Unknown",  # Try to map this value
-            extensions_list=extensions_list,
+            extensions_list=dict_without_empty_values(extensions_list),
         )
 
     except Exception as ex:
@@ -191,7 +194,7 @@ def normalize_rae():
             device_event_class_id="Unknown",  # Try to map this value
             event_name="Risk assessment",
             severity="Unknown",  # Try to map this value
-            extensions_list=extensions_list,
+            extensions_list=dict_without_empty_values(extensions_list),
         )
 
     except Exception as ex:
@@ -274,7 +277,7 @@ def normalize_xl_siem():
             device_event_class_id="Unknown",
             event_name=(event["EVENT_ID"] if "EVENT_ID" in event else "Unknown"),
             severity=(event["PRIORITY"] if "PRIORITY" in event else "Unknown"),
-            extensions_list=extensions_list,
+            extensions_list=dict_without_empty_values(extensions_list),
         )
 
     except Exception as ex:
