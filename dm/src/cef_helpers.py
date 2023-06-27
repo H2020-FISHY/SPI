@@ -1,24 +1,18 @@
 from requests import post
+import json
 
-def escape_cef_header_str(str):
-  return str.replace("\n", "").replace("\r", "").translate(str.maketrans({"\\":  r"\\", "|":  r"\|"}))
+def dict_without_empty_values(src_dict):
+    return {k: v for k, v in src_dict.items() if len(str(v).strip()) > 0}
 
-def escape_cef_extension_str(str):
-    return str.translate(str.maketrans({"\\":  r"\\", "=":  r"\="}))
-
-def build_cef_extension(extensions_keypairs):
-  return ' '.join(list(map(lambda extension_key: "{}={}".format(
-    escape_cef_extension_str(extension_key), 
-    escape_cef_extension_str(str(extensions_keypairs[extension_key]))), extensions_keypairs)))
-
-def build_cef(device_product, device_version, device_event_class_id, event_name, severity, extensions_list):
+def build_cef(device_product, device_version, device_event_class_id, event_name, severity, extensions_list, pilot):
     return {
-        "device_product": escape_cef_header_str(device_product),
-        "device_version": escape_cef_header_str(str(device_version)),
-        "device_event_class_id": escape_cef_header_str(str(device_event_class_id)),
-        "event_name": escape_cef_header_str(event_name),
-        "severity": escape_cef_header_str(str(severity)),
-        "extensions_list": build_cef_extension(extensions_list)
+        "device_product": device_product,
+        "device_version": str(device_version),
+        "device_event_class_id": str(device_event_class_id),
+        "event_name": event_name,
+        "severity": str(severity),
+        "extensions_list": json.dumps(dict_without_empty_values(extensions_list)),
+        "pilot": pilot
     }
 
 def http_post_cef(url, event):

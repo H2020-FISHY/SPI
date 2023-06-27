@@ -21,9 +21,6 @@ def if_in_push(src_key, src_dict, dst_key, dst_dict):
     if src_key in src_dict:
         dst_dict[dst_key] = src_dict[src_key]
 
-def dict_without_empty_values(src_dict):
-    return {k: v for k, v in src_dict.items() if len(str(v).strip()) > 0}
-
 
 @app.route("/api/normalize/zeek", methods=["POST"])
 def normalize_zeek():
@@ -37,7 +34,7 @@ def normalize_zeek():
 
     try:
         extensions_list = {
-            "ts": datetime.strptime(event["ts"].strip(), "%Y-%m-%dT%H:%M:%S.%fZ"),
+            "ts": str(datetime.strptime(event["ts"].strip(), "%Y-%m-%dT%H:%M:%S.%fZ")),
             "msg": event["msg"],
             "suppressFor": event["suppress_for"],
         }
@@ -45,10 +42,11 @@ def normalize_zeek():
         cef_event = build_cef(
             device_product="Zeek",
             device_version="1.0",
-            device_event_class_id="Unknown",  # Try to map this value
+            device_event_class_id="Unknown",
             event_name=event["note"],
-            severity="Unknown",  # Try to map this value
-            extensions_list=dict_without_empty_values(extensions_list),
+            severity="Unknown",
+            extensions_list=extensions_list,
+            pilot=event["pilot"] if "pilot" in event else "Unknown",
         )
 
     except Exception as ex:
@@ -84,17 +82,18 @@ def normalize_pmem():
 
     try:
         extensions_list = {
-            "ts": datetime.strptime(event["TimeStamp"].strip(), "%d/%m/%Y %H:%M:%S"),
+            "ts": str(datetime.strptime(event["TimeStamp"].strip(), "%d/%m/%Y %H:%M:%S")),
             "src": event["attackinIP"],
         }
 
         cef_event = build_cef(
             device_product="PMEM",
             device_version="1.0",
-            device_event_class_id="Unknown",  # Try to map this value
+            device_event_class_id="Unknown",
             event_name=event["type"],
-            severity="Unknown",  # Try to map this value
-            extensions_list=dict_without_empty_values(extensions_list),
+            severity="Unknown",
+            extensions_list=extensions_list,
+            pilot=event["pilot"] if "pilot" in event else "Unknown",
         )
 
     except Exception as ex:
@@ -130,7 +129,7 @@ def normalize_tm():
     try:
         extensions_list = {
             "entityId": event["entity_uuid"],
-            "ts": datetime.strptime(event["time"].strip(), "%Y-%m-%d %H:%M:%S.%f"),
+            "ts": str(datetime.strptime(event["time"].strip(), "%Y-%m-%d %H:%M:%S.%f")),
             "trustStatus": event["trust"],
             "trustState": str(event["state"]),
         }
@@ -138,10 +137,11 @@ def normalize_tm():
         cef_event = build_cef(
             device_product="TrustMonitor",
             device_version="1.0",
-            device_event_class_id="Unknown",  # Try to map this value
+            device_event_class_id="Unknown",
             event_name="Domain infrastructure integrity report",
-            severity="Unknown",  # Try to map this value
-            extensions_list=dict_without_empty_values(extensions_list),
+            severity="Unknown",
+            extensions_list=extensions_list,
+            pilot=event["pilot"] if "pilot" in event else "Unknown",
         )
 
     except Exception as ex:
@@ -179,9 +179,9 @@ def normalize_rae():
 
         extensions_list = {
             "id": result["id"],
-            "ts": datetime.strptime(
+            "ts": str(datetime.strptime(
                 result["timestamp"].strip(), "%Y-%m-%dT%H:%M:%S.%fZ"
-            ),
+            )),
             "qualRiskAssessment": result["overall_qualitative_assessment"],
             "quantRiskAssessment": str(result["overall_quantitative_assessment"]),
             "selectedRiskModels": str(result["selected_risk_models"]),
@@ -191,10 +191,11 @@ def normalize_rae():
         cef_event = build_cef(
             device_product="RAE",
             device_version="1.0",
-            device_event_class_id="Unknown",  # Try to map this value
-            event_name="Risk assessment",
-            severity="Unknown",  # Try to map this value
-            extensions_list=dict_without_empty_values(extensions_list),
+            device_event_class_id="Unknown",
+            event_name="Risk assessment report",
+            severity="Unknown",
+            extensions_list=extensions_list,
+            pilot=event["pilot"] if "pilot" in event else "Unknown",
         )
 
     except Exception as ex:
@@ -231,10 +232,11 @@ def normalize_xl_siem():
         event = event["AlarmEvent"]
 
         extensions_list = {
-            "ts": datetime.strptime(event["DATE"].strip(), "%Y-%m-%d %H:%M:%S"),
+            "ts": str(datetime.strptime(event["DATE"].strip(), "%Y-%m-%d %H:%M:%S")),
         }
 
         mappings = {
+            "EVENT_ID": "id",
             "RELATED_EVENTS": "relEvents",
             "RELATED_EVENTS_INFO": "relEventsInfo",
             "PLUGIN_ID": "pluginId",
@@ -276,9 +278,10 @@ def normalize_xl_siem():
             device_product="XL-SIEM",
             device_version="1.0",
             device_event_class_id="Unknown",
-            event_name=(event["EVENT_ID"] if "EVENT_ID" in event else "Unknown"),
+            event_name=(event["DESCRIPTION"] if "DESCRIPTION" in event else "Unknown"),
             severity=(event["PRIORITY"] if "PRIORITY" in event else "Unknown"),
-            extensions_list=dict_without_empty_values(extensions_list),
+            extensions_list=extensions_list,
+            pilot=event["pilot"] if "pilot" in event else "Unknown",
         )
 
     except Exception as ex:
