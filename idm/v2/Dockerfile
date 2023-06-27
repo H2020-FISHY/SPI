@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi9 AS ubi-micro-build
 
-ENV KEYCLOAK_VERSION 21.0.1
+ENV KEYCLOAK_VERSION 21.1.1
 ARG KEYCLOAK_DIST=https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz
 
 RUN dnf install -y tar gzip
@@ -28,10 +28,12 @@ COPY --from=ubi-micro-build --chown=1000:0 /opt/keycloak /opt/keycloak
 RUN echo "keycloak:x:0:root" >> /etc/group && \
     echo "keycloak:x:1000:0:keycloak user:/opt/keycloak:/sbin/nologin" >> /etc/passwd
 
-FROM keycloak-base
+USER 1000
 
 EXPOSE 8080
 EXPOSE 8443
+
+FROM keycloak-base
 
 COPY --chown=1000:root .ssl/tls.crt:fcs /.ssl/tls.crt
 COPY --chown=1000:root .ssl/tls.key:fcs /.ssl/tls.key
