@@ -19,7 +19,7 @@ subjectAltName = @alt_names
 subjectAltName = @alt_names
 
 [alt_names]
-IP.1 = 10.4.34.212 # node
+IP.1 = 10.4.34.136 # node
 IP.2 = 192.168.0.10 # net-dashboard
 IP.3 = 192.168.1.10 # net-spi
 IP.4 = 192.168.2.10 # net-central-repo
