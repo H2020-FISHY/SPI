@@ -175,17 +175,17 @@ def normalize_rae():
         return {"status": "error", "msg": "Missing body"}, 400
 
     try:
-        result = event["results"][0]
+        event = event["results"][0]
 
         extensions_list = {
-            "id": result["id"],
+            "id": event["id"],
             "ts": str(datetime.strptime(
-                result["timestamp"].strip(), "%Y-%m-%dT%H:%M:%S.%fZ"
+                event["timestamp"].strip(), "%Y-%m-%dT%H:%M:%S.%fZ"
             )),
-            "qualRiskAssessment": result["overall_qualitative_assessment"],
-            "quantRiskAssessment": str(result["overall_quantitative_assessment"]),
-            "selectedRiskModels": str(result["selected_risk_models"]),
-            "mitigationMeasures": str(result["mitigation_measures"]),
+            "qualRiskAssessment": event["overall_qualitative_assessment"],
+            "quantRiskAssessment": str(event["overall_quantitative_assessment"]),
+            "selectedRiskModels": str(event["selected_risk_models"]),
+            "mitigationMeasures": str(event["mitigation_measures"]),
         }
 
         cef_event = build_cef(
@@ -195,7 +195,7 @@ def normalize_rae():
             event_name="Risk assessment report",
             severity="Unknown",
             extensions_list=extensions_list,
-            pilot=event["pilot"] if "pilot" in event else "Unknown",
+            pilot=event["data_processing_activity"] if "data_processing_activity" in event else "Unknown",
         )
 
     except Exception as ex:
@@ -246,6 +246,8 @@ def normalize_xl_siem():
             "SRC_IP": "src",
             "SRC_PORT": "spt",
             "SRC_IP_HOSTNAME": "shost",
+            "USERDATA4": "smac",
+            "USERDATA6": "suser",
             "DST_IP": "dst",
             "DST_PORT": "dpt",
             "DST_IP_HOSTNAME": "dhost",
@@ -253,13 +255,15 @@ def normalize_xl_siem():
             "PASSWORD": "pass",
             "SID_NAME": "sidName",
             "FILENAME": "fileName",
-            "ORGANIZATION": "org",
             "RISK": "risk",
             "RELIABILITY": "reliability",
             "PROTOCOL": "proto",
             "CATEGORY": "category",
             "DESCRIPTION": "description",
             "SUBCATEGORY": "subcategory",
+        }
+
+        user_data_mappings = {
             "USERDATA1": "userData1",
             "USERDATA2": "userData2",
             "USERDATA3": "userData3",
@@ -274,6 +278,9 @@ def normalize_xl_siem():
         for key in mappings:
             if_in_push(key, event, mappings[key], extensions_list)
 
+        for key in user_data_mappings:
+            if_in_push(key, event, user_data_mappings[key], extensions_list)
+
         cef_event = build_cef(
             device_product="XL-SIEM",
             device_version="1.0",
@@ -281,7 +288,7 @@ def normalize_xl_siem():
             event_name=(event["DESCRIPTION"] if "DESCRIPTION" in event else "Unknown"),
             severity=(event["PRIORITY"] if "PRIORITY" in event else "Unknown"),
             extensions_list=extensions_list,
-            pilot=event["pilot"] if "pilot" in event else "Unknown",
+            pilot=event["ORGANIZATION"] if "ORGANIZATION" in event else "Unknown",
         )
 
     except Exception as ex:
