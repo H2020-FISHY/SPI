@@ -72,28 +72,34 @@ def normalize_zeek():
 @app.route("/api/normalize/pmem", methods=["POST"])
 def normalize_pmem():
     try:
-        event_text = request.get_data(as_text=True)
-        event = dict(s.split("=", 1) for s in shlex.split(event_text))
+        event = request.get_json()
     except:
-        return {"status": "error", "msg": "Invalid Text"}, 400
+        return {"status": "error", "msg": "Invalid JSON"}, 400
 
     if len(event) == 0:
         return {"status": "error", "msg": "Missing body"}, 400
 
     try:
         extensions_list = {
-            "ts": str(datetime.strptime(event["TimeStamp"].strip(), "%d/%m/%Y %H:%M:%S")),
-            "src": event["attackinIP"],
+            "ts": str(datetime.strptime(event["Timestamp"].strip(), "%d/%m/%Y %H:%M:%S")),
+            "src": event["Source.IP"],
+            "dst": event["Destination.IP"],
+            "proto": event["Protocol"],
+            "freq": event["Frequency"],
+            "description": event["Description"],
+            "trafficShare": event["Traffic Share"],
+            "spt": event["Src.Port"] if "Src.Port" in event else -1,
+            "dpt": event["Dst.Port"] if "Dst.Port" in event else -1,
         }
 
         cef_event = build_cef(
             device_product="PMEM",
             device_version="1.0",
             device_event_class_id="Unknown",
-            event_name=event["type"],
-            severity="Unknown",
+            event_name=event["Predictions"],
+            severity=event["Severity"],
             extensions_list=extensions_list,
-            pilot=event["pilot"] if "pilot" in event else "Unknown",
+            pilot=event["Pilot"] if "Pilot" in event else "Unknown",
         )
 
     except Exception as ex:
